@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>swan-core Spec Runner</title>
+</head>
+<body>
+    <script src="context.js"></script>
+    <script type="text/javascript">
+        // Configure our Karma and set up bindings
+        %CLIENT_CONFIG%
+        window.__karma__.setupContext(window);
+        // All served files with the latest timestamps
+        %MAPPINGS%
+    </script>
+    <!-- Dynamically replaced with <script> tags -->
+    %SCRIPTS%
+    <script type="text/javascript">
+        window.__karma__.loaded();
+    </script>
+</body>
+</html>
