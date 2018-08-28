@@ -3,6 +3,7 @@
   "version": "2.2.0",
   "description": "",
   "scripts": {
+    "build": "sh build.sh",
     "prepare": "./node_modules/.bin/webpack",
     "pretest": "sh build.sh",
     "test": "./node_modules/karma/bin/karma start ./test/karma.conf.js --single-run"
