@@ -336,7 +336,17 @@ export default class Slave {
     }
 
     switchTab(params) {
-        return this.swaninterface.invoke('reLaunch', params);
+        return this.swaninterface.swan.reLaunch({
+            ...params,
+            url: '/' + params.url
+        });
+    }
+
+    switchTab(params) {
+        return this.swaninterface.swan.reLaunch({
+            ...params,
+            url: '/' + params.url
+        });
     }
 
     /**

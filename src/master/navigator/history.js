@@ -1,9 +1,9 @@
-import swanEvents from '../../utils/swan-events';
-
 /**
  * @file swan的栈管理
  * @author houyu(houyu01@baidu.com)
  */
+import swanEvents from '../../utils/swan-events';
+
 export default class History {
     constructor(initSlaves) {
         this.historyStack = [...initSlaves];

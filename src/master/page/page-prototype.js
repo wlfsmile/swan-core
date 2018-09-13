@@ -2,10 +2,11 @@
  * @file page类的原型对象
  * @author houyu(houyu01@baidu.com)
  */
-import {mixinLifeCycle} from './life-cycle';
+import {
+    initLifeCycle
+} from './life-cycle';
 
 const noop = () => {};
-
 /**
  * 创建一个用户的page对象的原型单例
  * @param {Object} [masterManager] masterManager底层接口方法
@@ -60,6 +61,14 @@ export const createPagePrototype = (masterManager, globalSwan) => {
         sendMessageToCurSlave(message) {
             masterManager.communicator.sendMessage(this.privateProperties.slaveId, message);
         },
+
+        /**
+         * 页面中挂载的setData操作方法，操作后，会传到slave，对视图进行更改
+         *
+         * @param {string|Object} [path] - setData的数据操作路径，或setData的对象{path: value}
+         * @param {*} [value] - setData的操作值
+         * @param {Function} [cb] - setData的回调函数
+         */
         setData(path, value, cb) {
             this.sendDataOperation({
                 type: 'set',
@@ -142,13 +151,14 @@ export const createPagePrototype = (masterManager, globalSwan) => {
 
         selectAllComponents(selector) {
             return this.privateMethod
-                .getComponentsFromList(this.privateProperties.customComponents, selector);
+                .getComponentsFromList(this.privateProperties.customComponents, selector, '*');
         },
 
-        selectComponent() {
+        selectComponent(selector) {
             return this.selectAllComponents(selector)[0];
         },
 
+        // page实例中的私有方法合集
         privateMethod: {
             navigate(params) {
                 switch (params.openType) {
@@ -214,24 +224,38 @@ export const createPagePrototype = (masterManager, globalSwan) => {
                     type: `nextTick:${this.privateProperties.slaveId}`
                 });
             },
+
+            /**
+             * 向slave中发送message
+             *
+             * @param {Object} [message] - 发送的消息本体
+             */
             dispatchToSlave(message) {
                 masterManager.communicator.sendMessage(this.privateProperties.slaveId, message);
             },
 
-            getComponentsFromList(componentList, selector) {
+            /**
+             * 查询给定组件集合中的所有组件
+             *
+             * @param {Array} [componentList] - 要查询的基础自定义组件的列表
+             * @param {string} [selector] - 查询自定义组件使用的选择器
+             * @param {string} [nodeId] - 查询自定义组件的限定nodeId -- 即在某一个id为nodeId的组件下，查询自定义组件
+             * @return {Array} 查询出来的自定义组件实例集合
+             */
+            getComponentsFromList(componentList, selector, nodeId) {
                 // 将选择器表达式，切割成为数组
                 const selectorArr = selector.split(' ');
                 // 从右向左，先取出所有符合最后条件的集合
                 const topSelector = selectorArr.pop();
                 const judgeComponentMatch = (component, selector, ownerId) => {
-                    return (component.nodeId === selector || component.className.split(' ')
+                    return (component.nodeId === selector.replace(/^#/, '') || component.className.split(' ')
                         .find(className => {
                             return className.replace(/\w+__/g, '') === selector.replace(/^\./, '');
-                        })) && component.ownerId === ownerId;
+                        })) && (component.ownerId === ownerId || ownerId === '*');
                 };
                 // 依据某一个条件(className或nodeId)，选择出符合条件的组件实例列表
                 const findInComponentList = (componentList, selector) => Object.values(componentList)
-                    .filter(component => judgeComponentMatch(component, selector, this.nodeId));
+                    .filter(component => judgeComponentMatch(component, selector, nodeId));
                 // 选择出的符合最后条件的集合
                 const selectedComponents = findInComponentList(componentList, topSelector);
                 // 针对某一个组件，从下向上遍历选择器，确定该组件是否符合条件
@@ -243,7 +267,7 @@ export const createPagePrototype = (masterManager, globalSwan) => {
                         return false;
                     }
                     const selector = selectorArr[index];
-                    const matchSelector = judgeComponentMatch(selectedComponent, selector, this.nodeId);
+                    const matchSelector = judgeComponentMatch(selectedComponent, selector, nodeId);
                     return findReverse(
                         selectorArr,
                         componentList[selectedComponent.parentId],
@@ -263,17 +287,11 @@ export const createPagePrototype = (masterManager, globalSwan) => {
 };
 
 let pagePrototype = null;
-/**
- * 获取page的prototype的单例方法，节省初始化
- *
- * @param {Object} [masterManager] - master所有的全局挂载对象
- * @param {Object} [globalSwan] - 开发者使用的全局swan接口
- * @param {Object} [pageLifeCycleEventEmitter] - 页面生命周期事件流
- */
+// 获取page的prototype的单例方法，节省初始化
 export const getPagePrototypeInstance = (masterManager, globalSwan, pageLifeCycleEventEmitter) => {
     if (!pagePrototype) {
         pagePrototype = createPagePrototype(masterManager, globalSwan);
-        mixinLifeCycle(masterManager, pagePrototype, pageLifeCycleEventEmitter);
+        initLifeCycle(masterManager, pagePrototype, pageLifeCycleEventEmitter);
     }
     return pagePrototype;
 };

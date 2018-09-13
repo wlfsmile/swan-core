@@ -57,12 +57,16 @@ export default class VirtualComponentFactory {
     bindDataToInstance(properties, initData, instanceData, initialInstance) {
         const instanceProperties = deepClone(properties);
         // 将原型的properties与传入的props融合一下
-        if (instanceData) {
+        if (instanceProperties) {
             for (const prop in instanceData) {
                 if (!instanceProperties[prop]) {
                     instanceProperties[prop] = {};
                 }
                 instanceProperties[prop].value = instanceData[prop];
+                if (instanceProperties[prop].value !== instanceData[prop]
+                   && instanceProperties[prop].observer) {
+                    instanceProperties[prop].observer.call(initialInstance, instanceData[prop]);
+                }
             }
         }
         // 将properties与data进行融合
@@ -202,7 +206,8 @@ export default class VirtualComponentFactory {
             selectAllComponents(selector) {
                 return this.pageinstance.privateMethod.getComponentsFromList(
                     this.pageinstance.privateProperties.customComponents,
-                    selector
+                    selector,
+                    this.nodeId
                 );
             },
             selectComponent(selector) {
@@ -226,8 +231,16 @@ export default class VirtualComponentFactory {
      * @return {class} 注册好的类
      */
     defineVirtualComponent(componentProto, componentPath = global.__swanRoute) {
+        const componentDefaultProto = {
+            properties: {},
+            data: {},
+            methods: {}
+        };
         this.virtualClassInfos[componentPath] = {
-            componentProto
+            componentProto: {
+                ...componentDefaultProto,
+                ...componentProto
+            }
         };
     }
 

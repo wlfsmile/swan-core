@@ -2,6 +2,7 @@
  * @file webpack config for swan
  * @author houyu(houyu01@baidu.com)
  */
+
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const pkg = require('./package.json');

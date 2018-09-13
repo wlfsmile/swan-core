@@ -19,20 +19,8 @@ export default class Loader {
             return Promise.resolve();
         }
         return new Promise((resolve, reject) => {
-            let ua = navigator.userAgent;
-            let reg = /baiduboxapp\/(\d{1,}\.\d{1,})/g;
-            let semver = reg.exec(ua);
-            let addCors = false;
-            if (Array.isArray(semver) && parseFloat(semver[1]) >= 10.12 && ua.indexOf('Android') >= 0) {
-                if (window['Bdbox_aiapps_jsbridge'].allowCrossOrigin() === '1') {
-                    addCors = true;
-                }
-            }
             const script = doc.createElement('script');
             script.type = 'text/javascript';
-            if (addCors) {
-                script.crossOrigin = 'anonymous';
-            }
             script.src = loadPath;
             script.onload = () => {
                 this.loadedResource.js[loadPath] = true;

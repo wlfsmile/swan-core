@@ -29,6 +29,8 @@ export default class Master {
         this.swanEventsCommunicator = new EventsEmitter();
         this.virtualComponentFactory = new VirtualComponentFactory();
 
+        // 监听app、page所有生命周期事件
+        this.bindLifeCycleEvents();
         // 监听所有的slave事件
         this.initEvents();
 
@@ -129,7 +131,7 @@ export default class Master {
      */
     getAppMethods() {
         this.appLifeCycleEventEmitter = new EventsEmitter();
-        return getAppMethods(this.swaninterface, this.appLifeCycleEventEmitter);
+        return getAppMethods(this.swaninterface, this.appLifeCycleEventEmitter, this.lifeCycleEventEmitter);
     }
 
     /**
@@ -171,6 +173,16 @@ export default class Master {
     initEvents() {
         const allSlaveEvents = slaveEventInit(this);
         this.pageLifeCycleEventEmitter = allSlaveEvents.pageLifeCycleEventEmitter;
+    }
+
+    bindLifeCycleEvents() {
+        this.lifeCycleEventEmitter = new EventsEmitter();
+        this.swaninterface.bind('lifecycle', event => {
+            this.lifeCycleEventEmitter.fireMessage({
+                type: event.lcType + (event.lcType === 'onShow' ? event.wvID : ''),
+                event
+            });
+        });
     }
 
     /**

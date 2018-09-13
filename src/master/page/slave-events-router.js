@@ -164,33 +164,31 @@ export default class SlaveEventsRouter {
             if (Object.prototype.toString.call(events) !== '[object Array]') {
                 events = [events];
             }
-            events.forEach(event => {
+            // 对于客户端事件做一次中转，因为前端有特殊逻辑处理(onShow必须在onLoad之后)
+            const detectOnShow = event => {
                 if (event.params.eventName === 'onLoad') {
-                    pageLifeCycleEventEmitter.onMessage('onShow', ({event: e}) => {
-                        if (+event.params.slaveId === +e.wvID) {
-                            this.callPageMethod(e.wvID, '_onShow', {}, e);
-                        }
+                    this.masterManager.lifeCycleEventEmitter.onMessage('onShow' + event.params.slaveId, paramsQueue => {
+                        // 筛选出本次的onShow的对应参数
+                        const e = [].concat(paramsQueue).filter(params => +params.event.wvID === +event.params.slaveId)
+                            .slice(-1).map(params => params.event)[0];
+                        this.callPageMethod(event.params.slaveId, '_onShow', {}, e);
                     }, {listenPreviousEvent: true});
                 }
-            });
+            };
+            events.forEach(detectOnShow);
         }, {listenPreviousEvent: true});
 
-        // 普通事件的绑定
-        pageEventsToLifeCycle.forEach(eventName => {
-            pageLifeCycleEventEmitter.onMessage(eventName, ({event}) => {
-                this.callPageMethod(event.wvID, `_${eventName}`, {}, event);
-            }, {listenPreviousEvent: true});
-        });
+        pageLifeCycleEventEmitter.onMessage('onTabItemTap', ({event}) => {
+            this.callPageMethod(event.wvID, '_onTabItemTap', {}, event);
+        }, {listenPreviousEvent: true});
 
-        // 对于客户端事件做一次中转，因为前端有特殊逻辑处理
+        this.masterManager.lifeCycleEventEmitter.onMessage('onHide', e => {
+            let event = e.event;
+            this.callPageMethod(event.wvID, '_onHide', {}, event);
+        }, {listenPreviousEvent: true});
+
         this.masterManager.swaninterface
-        .bind('lifecycle', event => {
-            pageLifeCycleEventEmitter.fireMessage({
-                type: event.lcType,
-                event
-            });
-        })
-        .bind('onTabItemTap', e => {
+        .bind('onTabItemTap', () => {
             pageLifeCycleEventEmitter.fireMessage({
                 type: 'onTabItemTap',
                 event

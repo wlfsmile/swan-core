@@ -119,14 +119,22 @@ export default class SanFactory {
         // merge传入的proto
         return Object.keys(mergeProto)
             .reduce((mergedClassProto, propName) => {
-                if (propName === 'constructor') {
-                    mergedClassProto['constructor'] = function (options) {
-                        targetProto.constructor && targetProto.constructor.call(this, options);
-                        mergeProto.constructor && mergeProto.constructor.call(this, options);
-                    };
-                }
-                else {
-                    mergedClassProto[propName] = mergeProto[propName];
+                switch (propName) {
+                    case 'constructor':
+                        mergedClassProto['constructor'] = function (options) {
+                            targetProto.constructor && targetProto.constructor.call(this, options);
+                            mergeProto.constructor && mergeProto.constructor.call(this, options);
+                        };
+                        break;
+                    case 'computed':
+                        mergedClassProto[propName] = Object.assign(
+                                {},
+                                mergedClassProto[propName],
+                                mergeProto[propName]
+                            );
+                        break;
+                    default:
+                        mergedClassProto[propName] = mergeProto[propName];
                 }
                 return mergedClassProto;
             }, {...targetProto});

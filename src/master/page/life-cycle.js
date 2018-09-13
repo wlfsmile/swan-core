@@ -4,6 +4,7 @@
  */
 import swanEvents from '../../utils/swan-events';
 
+/* eslint-disable fecs-camelcase */
 const lifeCyclePrototype = {
 
     /**
@@ -73,6 +74,7 @@ const lifeCyclePrototype = {
      */
     _onUnload(params) {
         this.onUnload && this.onUnload(params);
+        this._onHide();
         this._sendPageLifeCycleMessage('onUnload', params);
     },
 
@@ -116,7 +118,7 @@ const lifeCyclePrototype = {
      * @param {string} [eventName] - 发生的事件名称
      * @param {Object} [e] - 发生事件的参数
      */
-    _sendPageLifeCycleMessage(eventName, e) {
+    _sendPageLifeCycleMessage(eventName, e = {}) {
         this._pageLifeCycleEventEmitter.fireMessage({
             type: 'PagelifeCycle',
             params: {
@@ -136,9 +138,10 @@ const lifeCyclePrototype = {
  * @param {Object} [pageLifeCycleEventEmitter] - 页面生命周期的事件流对象
  * @return merge后的Page的prototype
  */
-export const mixinLifeCycle = (mastermanager, pagePrototype, pageLifeCycleEventEmitter) => {
+export const initLifeCycle = (mastermanager, pagePrototype, pageLifeCycleEventEmitter) => {
     const swaninterface = mastermanager.swaninterface;
     return Object.assign(pagePrototype, lifeCyclePrototype, {
         _pageLifeCycleEventEmitter: pageLifeCycleEventEmitter
     });
 };
+/* eslint-enable fecs-camelcase */

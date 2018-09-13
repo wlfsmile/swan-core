@@ -90,7 +90,11 @@ export default class TabSlave {
         return this.currentIndex;
     }
     switchTab(paramsObj) {
-        return this.swaninterface.invoke('switchTab', paramsObj);
+        return this.swaninterface.invoke('switchTab', paramsObj)
+        .then(res => {
+            this.history.popTo(this.initSlave.getSlaveId());
+            return res;
+        });
     }
     onswitchTab({fromId, toId, toPage}) {
         const toChild = this.findChild(toPage);

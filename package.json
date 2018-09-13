@@ -1,9 +1,8 @@
 {
-  "name": "swan-core",
-  "version": "2.2.0",
+  "name": "@super-fe/swan-core",
+  "version": "2.2.16",
   "description": "",
   "scripts": {
-    "build": "sh build.sh",
     "prepare": "./node_modules/.bin/webpack",
     "pretest": "sh build.sh",
     "test": "./node_modules/karma/bin/karma start ./test/karma.conf.js --single-run"
@@ -17,13 +16,13 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@baidu/events-emitter": "1.0.15"
+    "@baidu/events-emitter": "1.0.15",
+    "babel-plugin-istanbul": "^4.1.6",
+    "fs-finder": "^1.8.1",
+    "karma-spec-reporter": "0.0.32",
+    "san": "^3.5.10"
   },
   "devDependencies": {
-    "san": "^3.5.10",
-    "fs-finder": "^1.8.1",
-    "babel-plugin-istanbul": "^4.1.6",
-    "karma-spec-reporter": "0.0.32",
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
     "babel-plugin-transform-class-properties": "^6.24.1",

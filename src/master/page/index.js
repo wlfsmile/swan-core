@@ -10,10 +10,16 @@ import {Data, getParams, Share, deepClone} from '../../utils';
 
 const pageLifeCycleEventEmitter = new EventsEmitter();
 
+/**
+ * slave的绑定事件初始化
+ *
+ * @param {Object} [master] - master全局变量实例
+ * @return {Object} - 所有slave事件的事件流集合
+ */
 export const slaveEventInit = master => {
     const slaveEventsRouter = new SlaveEventsRouter(
             master,
-            pageLifeCycleEventEmitter 
+            pageLifeCycleEventEmitter
         );
     slaveEventsRouter.initbindingEvents();
     return {
@@ -21,7 +27,18 @@ export const slaveEventInit = master => {
     };
 };
 
-const init = (pageInstance, slaveId, accessUri, masterManager, globalSwan, appConfig) => {
+/**
+ * 初始化页面实例，附带页面原型，页面的创建函数
+ *
+ * @param {Object} [pageInstance] - 页面实例
+ * @param {string} [slaveId] - 页面的slaveId
+ * @param {string} [accessUri] - 页面的URL(带query)
+ * @param {Object} [masterManager] - 小程序的全局挂载实例
+ * @param {Object} [globalSwan] - 页面的swan接口对象（开发者用的那个swan）
+ * @param {Object} [appConfig] - 页面配置对象(app.json中的配置内容)
+ * @return {Object} - 创建页面实例
+ */
+const initUserPageInstance = (pageInstance, slaveId, accessUri, masterManager, globalSwan, appConfig) => {
     const swaninterface = masterManager.swaninterface;
     const appid = swaninterface.boxjs.data.get({name: 'swan-appInfoSync'}).appid;
     slaveId = '' + slaveId;
@@ -70,6 +87,8 @@ const init = (pageInstance, slaveId, accessUri, masterManager, globalSwan, appCo
         pageObj: pageInstance
     };
 };
+
+// Page对象中，写保护的所有key
 const isWriteProtected = pageKey => {
     const protectedKeys = [
         'uri', 'setData', 'getData', 'shiftData',
@@ -78,6 +97,13 @@ const isWriteProtected = pageKey => {
     ];
     return false;
 };
+
+/**
+ * 克隆page对象方法
+ *
+ * @param {Object} [pagePrototype] - 开发者的页面原型
+ * @return {Object} - 克隆出的页面实例
+ */
 const cloneSwanPageObject = (pagePrototype = {}) => {
     let newSwanObject = {};
     pagePrototype.data = pagePrototype.data || {};
@@ -98,7 +124,7 @@ export const createPageInstance = (accessUri, slaveId, appConfig) => {
     swanEvents('master_active_get_user_page_instance');
     // 过滤传过来的originUri,临时方案；后面和生成path做个统一的方法；
     const uriPath = accessUri.split('?')[0];
-    const userPageInstance = init(
+    const userPageInstance = initUserPageInstance(
         cloneSwanPageObject(global.masterManager.pagesQueue[uriPath]),
         slaveId,
         accessUri,
@@ -110,14 +136,24 @@ export const createPageInstance = (accessUri, slaveId, appConfig) => {
     return userPageInstance;
 };
 
-// 获取用户当前位于栈顶的 page 对象
+/**
+ * 获取用户当前页面栈
+ *
+ * @return {Array} - 页面栈
+ */
 export const getCurrentPages = () => {
     return global.masterManager.navigator.history.getAllSlaves()
     .map(currentSlave => currentSlave.getCurrentChildren()
         .getUserPageInstance().pageObj
     );
 };
-// 暴露给用户的 Page 方法
+
+/**
+ * 暴露给用户的 Page 方法
+ *
+ * @param {Object} [pageObj] - 开发者的page原型对象
+ * @return {Object} - 开发者的page原型对象
+ */
 export const Page = pageObj => {
     const uri = global.__swanRoute;
     const usingComponents = global.usingComponents || [];

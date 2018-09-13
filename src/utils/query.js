@@ -2,11 +2,13 @@
  * @file 解析scheme中path和query的方法
  * @author xuechao(xuechao02@baidu.com)
  */
-
+import {isIOS} from './platform';
 export const processParam = param => {
-    const getScheme = param.appInfo.appLaunchScheme || '';
-    const scheme = decodeURIComponent(getScheme);
-    if (/:\/\/v[0-9]+/.test(scheme) || !getScheme) {
+    let scheme = param.appInfo.appLaunchScheme || '';
+    if (isIOS()) {
+        scheme = decodeURIComponent(scheme);
+    }
+    if (/:\/\/v[0-9]+/.test(scheme) || !scheme) {
         return param;
     }
     const processSchemeRegx = /(_baiduboxapp|callback|upgrade).*?(&|$)/g;
